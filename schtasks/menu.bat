@@ -188,16 +188,10 @@ goto menu
     REM ==============================================
 
 :delete_task
-    cls
-    echo ==============================================
-    echo             Eliminar Tarea
-    echo ==============================================
-    set /p taskName=Nombre de la tarea a eliminar:
-    schtasks /delete /tn "%taskName%" /f
-    echo.
-    echo Tarea eliminada correctamente.
-    pause
-    goto menu
+    REM ==============================================
+    REM TODO: Hacer el apartado de la eliminación de una tarea programada.
+    REM Buscar como eliminar una tarea programada con schtasks.
+    REM ==============================================
 
 :salir
     exit
