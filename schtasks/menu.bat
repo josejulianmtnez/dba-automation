@@ -182,7 +182,7 @@ goto menu
     REM ==============================================
     cls
 
-:delete_backup_task
+:delete_backup
     REM ==============================================
     REM TODO: Hacer el apartado de la eliminación del backup basandose en delete_snapshot
     REM ==============================================
