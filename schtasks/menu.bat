@@ -188,10 +188,31 @@ goto menu
     REM ==============================================
 
 :delete_task
-    REM ==============================================
-    REM TODO: Hacer el apartado de la eliminación de una tarea programada.
-    REM Buscar como eliminar una tarea programada con schtasks.
-    REM ==============================================
+    cls
+    echo ==============================================
+    echo         Eliminar Tarea Programada
+    echo ==============================================
+    echo.
+    set /p taskName=Escribe el nombre EXACTO de la tarea a eliminar:
+    echo.
+    echo ¿Estás seguro que deseas eliminar la tarea "%taskName%"? (S/N)
+    set /p confirm=
+
+    if /i "%confirm%"=="S" (
+        schtasks /delete /tn "%taskName%" /f
+        if %errorlevel%==0 (
+            echo.
+            echo Tarea "%taskName%" eliminada correctamente.
+        ) else (
+            echo.
+            echo No se pudo eliminar la tarea. Asegúrate de que el nombre es correcto.
+        )
+    ) else (
+        echo.
+        echo Operación cancelada.
+    )
+    pause
+    goto menu
 
 :salir
     exit
