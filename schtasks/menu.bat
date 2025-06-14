@@ -32,6 +32,7 @@ echo 1. Programar Tarea de Snapshot de una VM
 echo 2. Eliminar Tarea Snapshot de una VM
 echo 3. Programar Backup de una VM
 echo 4. Eliminar Tarea Backup de una VM
+echo 5. Eliminar una Tarea Programada
 echo 0. Salir
 set /p choice=Seleccione una opción:
 
@@ -39,7 +40,7 @@ if %choice%==1 goto create_snapshot
 if %choice%==2 goto delete_snapshot
 if %choice%==3 goto create_backup
 if %choice%==4 goto delete_backup
-if %choice%==4 goto delete_task
+if %choice%==5 goto delete_task
 if %choice%==0 goto salir
 
 goto menu
