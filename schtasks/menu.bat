@@ -177,16 +177,142 @@ goto menu
     goto menu
 
 :create_backup
-    REM ==============================================
-    REM TODO: Hacer la lógica de la creación del Backup basandose en create_snapshot.
-    REM Se le debe solicitar todo lo necesario al usuario.
-    REM ==============================================
     cls
+    echo ==============================================
+    echo    Programar Backup Periódico de una VM
+    echo ==============================================
+    set /p vmName=Nombre de la VM a respaldar:
+    call :vm_exists "%vmName%"
+    set /p backupPath=Ruta donde se almacenará el backup (Ejemplo: C:\Backups\):
+    echo.
+    echo ==============================================
+    echo        Información de la Tarea a Programar
+    echo ==============================================
+    set /p taskName=Nombre de la tarea:
+    set /p taskTime=Hora de ejecución (HH:MM 24hrs):
+    set /p taskPath=Ruta donde se generará el script (Ejemplo: C:\Ruta\al\create_backup.bat):
+    echo Periodo de ejecución de la tarea
+    echo 1. Diario
+    echo 2. Semanal
+    echo 3. Mensual
+    set /p taskPeriod=Seleccione una opción:
+
+    mkdir "%taskPath%\.." 2>nul
+
+    echo @echo off > "%taskPath%"
+    echo chcp 65001 ^>nul >> "%taskPath%"
+    echo. >> "%taskPath%"
+
+    echo for /f "tokens=2,* delims= " %%%%i in ('reg query "HKLM\SOFTWARE\Oracle\VirtualBox" /v InstallDir 2^^^>nul') do set "VBOX_INSTALL_PATH=%%%%j" >> "%taskPath%"
+    echo if "%%VBOX_INSTALL_PATH%%"=="" ( >> "%taskPath%"
+    echo     echo VirtualBox no está instalado o no se pudo encontrar la ruta de instalación. >> "%taskPath%"
+    echo     pause >> "%taskPath%"
+    echo     exit /b 1 >> "%taskPath%"
+    echo ) >> "%taskPath%"
+    echo set "PATH=%%PATH%%;%%VBOX_INSTALL_PATH%%" >> "%taskPath%"
+    echo. >> "%taskPath%"
+
+    echo VBoxManage showvminfo "%%~1" ^>nul 2^>^&1 >> "%taskPath%"
+    echo if errorlevel 1 ( >> "%taskPath%"
+    echo     echo La m^áquina virtual "%%~1" no existe. >> "%taskPath%"
+    echo     pause >> "%taskPath%"
+    echo     exit /b 1 >> "%taskPath%"
+    echo ) >> "%taskPath%"
+    echo. >> "%taskPath%"
+
+    echo REM Obtener fecha actual en formato YYYYMMDD_HHMMSS >> "%taskPath%"
+    echo for /f "tokens=2 delims==" %%%%I in ('"wmic os get localdatetime /value"') do set datetime=%%%%I >> "%taskPath%"
+    echo set "fecha=%%datetime:~0,4%%%%datetime:~4,2%%%%datetime:~6,2%%_%%datetime:~8,2%%%%datetime:~10,2%%%%datetime:~12,2%%" >> "%taskPath%"
+    echo set "backupname=%%~1_Backup_%%fecha%%" >> "%taskPath%"
+    echo. >> "%taskPath%"
+
+    echo echo Realizando backup de la VM "%%~1" como "%%backupname%%"... >> "%taskPath%"
+    echo VBoxManage clonevm "%%~1" --name "%%backupname%%" --basefolder "%%~2" --register >> "%taskPath%"
+    echo if errorlevel 1 ( >> "%taskPath%"
+    echo     echo Error al crear el backup. >> "%taskPath%"
+    echo     pause >> "%taskPath%"
+    echo     exit /b 1 >> "%taskPath%"
+    echo ) >> "%taskPath%"
+    echo. >> "%taskPath%"
+    echo echo Backup creado exitosamente. >> "%taskPath%"
+
+    set "scheduleType=DAILY"
+    if "%taskPeriod%"=="2" set "scheduleType=WEEKLY"
+    if "%taskPeriod%"=="3" set "scheduleType=MONTHLY"
+
+    schtasks /create /tn "%taskName%" /tr "\"%taskPath%\" \"%vmName%\" \"%backupPath%\"" /sc %scheduleType% /st %taskTime% /f
+    echo.
+    echo Tarea programada correctamente.
+    pause
+    goto menu
 
 :delete_backup
-    REM ==============================================
-    REM TODO: Hacer el apartado de la eliminación del backup basandose en delete_snapshot
-    REM ==============================================
+    cls
+    echo ==============================================
+    echo   Eliminar Backup Periódico de una VM
+    echo ==============================================
+    set /p vmName=Nombre de la VM original:
+    call :vm_exists "%vmName%"
+    echo.
+    echo Lista de máquinas virtuales (busque el backup):
+    VBoxManage list vms
+    echo.
+    set /p backupName=Nombre exacto de la VM de backup a eliminar:
+    echo.
+    echo ==============================================
+    echo        Información de la Tarea a Programar
+    echo ==============================================
+    set /p taskName=Nombre de la tarea:
+    set /p taskTime=Hora de ejecución (HH:MM 24hrs):
+    set /p taskPath=Ruta donde se generará el script (Ejemplo: C:\Ruta\al\delete_backup.bat):
+    echo Periodo de ejecución de la tarea
+    echo 1. Diario
+    echo 2. Semanal
+    echo 3. Mensual
+    set /p taskPeriod=Seleccione una opción:
+
+    mkdir "%taskPath%\.." 2>nul
+
+    echo @echo off > "%taskPath%"
+    echo chcp 65001 ^>nul >> "%taskPath%"
+    echo. >> "%taskPath%"
+
+    echo for /f "tokens=2,* delims= " %%%%i in ('reg query "HKLM\SOFTWARE\Oracle\VirtualBox" /v InstallDir 2^^^>nul') do set "VBOX_INSTALL_PATH=%%%%j" >> "%taskPath%"
+    echo if "%%VBOX_INSTALL_PATH%%"=="" ( >> "%taskPath%"
+    echo     echo VirtualBox no está instalado o no se pudo encontrar la ruta de instalación. >> "%taskPath%"
+    echo     pause >> "%taskPath%"
+    echo     exit /b 1 >> "%taskPath%"
+    echo ) >> "%taskPath%"
+    echo set "PATH=%%PATH%%;%%VBOX_INSTALL_PATH%%" >> "%taskPath%"
+    echo. >> "%taskPath%"
+
+    echo VBoxManage showvminfo "%%~1" ^>nul 2^>^&1 >> "%taskPath%"
+    echo if errorlevel 1 ( >> "%taskPath%"
+    echo     echo La m^áquina virtual "%%~1" no existe. >> "%taskPath%"
+    echo     pause >> "%taskPath%"
+    echo     exit /b 1 >> "%taskPath%"
+    echo ) >> "%taskPath%"
+    echo. >> "%taskPath%"
+
+    echo echo Eliminando backup "%%~1"... >> "%taskPath%"
+    echo VBoxManage unregistervm "%%~1" --delete >> "%taskPath%"
+    echo if errorlevel 1 ( >> "%taskPath%"
+    echo     echo Error al eliminar el backup. >> "%taskPath%"
+    echo     pause >> "%taskPath%"
+    echo     exit /b 1 >> "%taskPath%"
+    echo ) >> "%taskPath%"
+    echo. >> "%taskPath%"
+    echo echo Backup eliminado exitosamente. >> "%taskPath%"
+
+    set "scheduleType=DAILY"
+    if "%taskPeriod%"=="2" set "scheduleType=WEEKLY"
+    if "%taskPeriod%"=="3" set "scheduleType=MONTHLY"
+
+    schtasks /create /tn "%taskName%" /tr "\"%taskPath%\" \"%backupName%\"" /sc %scheduleType% /st %taskTime% /f
+    echo.
+    echo Tarea programada correctamente.
+    pause
+    goto menu
 
 :delete_task
     cls
