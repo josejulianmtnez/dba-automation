@@ -50,7 +50,7 @@ for /f %%u in (temp_users.txt) do (
 del temp_users.txt
 
 echo.
-set /p user=Ingrese el nombre del usuario al que asignará permisos: 
+set /p user=Ingrese el nombre del usuario al que asignara permisos: 
 
 REM Mostrar lista de permisos numerados
 echo.
@@ -60,12 +60,8 @@ echo 2. INSERT       - Insertar datos en tablas
 echo 3. UPDATE       - Modificar datos en tablas
 echo 4. DELETE       - Eliminar datos de tablas
 echo 5. TRUNCATE     - Truncar tablas
-echo 6. REFERENCES   - Crear claves foráneas
+echo 6. REFERENCES   - Crear claves foraneas
 echo 7. TRIGGER      - Crear triggers
-echo 8. USAGE        - Usar un esquema
-echo 9. CREATE       - Crear objetos en un esquema
-echo 10. CONNECT     - Conectarse a la base de datos
-echo 11. TEMP        - Crear tablas temporales
 echo 0. TODOS LOS PERMISOS
 echo ===============================
 echo.
@@ -79,14 +75,10 @@ set "perm_4=DELETE"
 set "perm_5=TRUNCATE"
 set "perm_6=REFERENCES"
 set "perm_7=TRIGGER"
-set "perm_8=USAGE"
-set "perm_9=CREATE"
-set "perm_10=CONNECT"
-set "perm_11=TEMP"
 
-REM Si selecciona 0, todos los permisos
+REM Si selecciona 0, son todos los permisos
 if "%permisos_nums%"=="0" (
-    set permisos=SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER, USAGE, CREATE, CONNECT, TEMP
+    set permisos=SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
 ) else (
     set permisos=
     for %%i in (%permisos_nums%) do (
@@ -111,6 +103,8 @@ if "%tabla%"=="*" (
 
 REM Aplicar permisos
 echo.
+echo Revocando permisos existentes para %user% en %tabla_comando%...
+psql -U postgres -d %dbname% -c "REVOKE ALL ON %tabla_comando% FROM %user%;"
 echo Otorgando permisos [%permisos%] sobre %tabla_comando% a %user%...
 psql -U postgres -d %dbname% -c "GRANT %permisos% ON %tabla_comando% TO %user%;"
 
