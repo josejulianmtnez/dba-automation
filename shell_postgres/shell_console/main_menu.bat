@@ -35,7 +35,7 @@ if "%choice%"=="1" call backup_database.bat
 if "%choice%"=="2" call restore_database.bat
 if "%choice%"=="3" call create_and_restore_database.bat
 if "%choice%"=="4" call delete_database.bat
-REM if "%choice%"=="5" call create_user.bat
+if "%choice%"=="5" call create_user.bat
 REM if "%choice%"=="6" call modify_permissions.bat
 REM if "%choice%"=="7" call view_users.bat
 if "%choice%"=="8" goto :exitProgram
