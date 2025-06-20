@@ -182,8 +182,7 @@ goto menu
     echo    Programar Backup Periódico de una VM
     echo ==============================================
     set /p vmName=Nombre de la VM a respaldar:
-    call :vm_exists "%vmName%"
-    set /p backupPath=Ruta donde se almacenará el backup (Ejemplo: C:\Backups\):
+    set /p backupPath=Ruta donde se almacenará el backup (Ejemplo: C:\Ruta\backups):
     echo.
     echo ==============================================
     echo        Información de la Tarea a Programar
@@ -251,13 +250,10 @@ goto menu
     echo ==============================================
     echo   Eliminar Backup Periódico de una VM
     echo ==============================================
-    set /p vmName=Nombre de la VM original:
-    call :vm_exists "%vmName%"
-    echo.
-    echo Lista de máquinas virtuales (busque el backup):
+    echo Lista de máquinas virtuales:
     VBoxManage list vms
     echo.
-    set /p backupName=Nombre exacto de la VM de backup a eliminar:
+    set /p backupName= Escriba el nombre exacto de la VM del backup a eliminar:
     echo.
     echo ==============================================
     echo        Información de la Tarea a Programar
