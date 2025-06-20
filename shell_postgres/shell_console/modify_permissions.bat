@@ -4,23 +4,7 @@ setlocal enabledelayedexpansion
 REM Configuración
 set PGHOST=localhost
 set PGPORT=5432
-set BACKUP_DIR=C:\Postgrebk
 set DEFAULT_DB=mi_financiera_demo
-
-:menu
-cls
-echo **************************
-echo *   Modificar Permisos   *
-echo **************************
-echo.
-echo 1. Modificar permisos en PostgreSQL a un usuario
-echo 0. Volver al menu principal
-echo.
-set /p option=Seleccione una opcion: 
-
-if "%option%"=="1" goto permisos_postgres
-if "%option%"=="0" exit /b
-goto menu
 
 :permisos_postgres
 cls
@@ -109,6 +93,6 @@ echo Otorgando permisos [%permisos%] sobre %tabla_comando% a %user%...
 psql -U postgres -d %dbname% -c "GRANT %permisos% ON %tabla_comando% TO %user%;"
 
 echo.
-echo Permisos aplicados correctamente al usuario %user%.
+echo Permisos actualizados correctamente para el usuario %user%.
 pause
 goto menu
