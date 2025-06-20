@@ -5,7 +5,7 @@ REM ===========================================================
 REM        Script para ver tablas y privilegios en PostgreSQL
 REM ===========================================================
 
-REM 
+REM Configuración por defecto
 set PGHOST=localhost
 set PGPORT=5432
 set DEFAULT_DB=8ids1
@@ -49,9 +49,11 @@ if %count%==0 (
     goto :mainMenu
 )
 
+
 echo.
 set /p tablechoice="Selecciona la tabla por número para ver sus privilegios: "
 set "TABLE=!table%tablechoice%!"
+
 
 if not "!TABLE!"=="" (
     echo.
