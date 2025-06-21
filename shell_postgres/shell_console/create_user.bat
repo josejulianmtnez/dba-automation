@@ -115,4 +115,5 @@ if %errorlevel% neq 0 (
 echo.
 echo Permisos otorgados exitosamente para el usuario %NEW_USER% sobre %TABLE%.
 pause
-exit
+endlocal
+exit /b

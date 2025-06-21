@@ -8,15 +8,15 @@ REM ===========================================================
 REM Configuración por defecto
 set PGHOST=localhost
 set PGPORT=5432
-set DEFAULT_DB=8ids1
+set DEFAULT_DB=mi_financiera_demo
 set DEFAULT_USER=postgres
 
 
 :mainMenu
 cls
-echo ***************************
+echo *******************************
 echo *  Ver privilegios de tablas  *
-echo ***************************
+echo *******************************
 
 
 set /p PGUSER="Ingresa el nombre de usuario de PostgreSQL [por defecto: %DEFAULT_USER%]: "

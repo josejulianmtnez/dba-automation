@@ -3,6 +3,7 @@ setlocal enabledelayedexpansion
 
 REM Configuración
 set PGHOST=localhost
+set PGUSER=postgres
 set PGPORT=5432
 set DEFAULT_DB=mi_financiera_demo
 
@@ -23,18 +24,30 @@ echo.
 set /p dbname=Escriba el nombre de la base de datos [por defecto: %DEFAULT_DB%]: 
 if "%dbname%"=="" set dbname=%DEFAULT_DB%
 
-REM Mostrar usuarios reales (roles con login)
 echo.
 echo Usuarios disponibles en la base de datos %dbname%:
 psql -U postgres -d %dbname% -t -A -c "SELECT rolname FROM pg_roles WHERE rolcanlogin = true;" > temp_users.txt
 
+set count=0
 for /f %%u in (temp_users.txt) do (
-    echo     %%u
+    set /a count+=1
+	echo     !count!.%%u
+	set "user!count!=%%u"
+
+	
 )
 del temp_users.txt
 
+if %count%==0 (
+    echo No hay usuarios disponibles.
+    pause
+    goto :permisos_postgres
+)
+
+
 echo.
-set /p user=Ingrese el nombre del usuario al que asignara permisos: 
+set /p userchoice="Selecciona la tabla por número para ver sus privilegios: "
+set "USER=!user%userchoice%!"
 
 REM Mostrar lista de permisos numerados
 echo.
@@ -75,22 +88,39 @@ if "%permisos_nums%"=="0" (
     )
 )
 
-REM Seleccionar tabla o todas
+REM Seleccionar tabla
 echo.
-set /p tabla=Ingrese la tabla destino (o * para todas): 
+echo Listando tablas disponibles en la base de datos %dbname%...
+psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %dbname% -t -c "SELECT tablename FROM pg_tables WHERE schemaname='public';" > temp_tables.txt
 
-if "%tabla%"=="*" (
-    set tabla_comando=ALL TABLES IN SCHEMA public
-) else (
-    set tabla_comando=TABLE %tabla%
+set count=0
+for /f "usebackq tokens=* delims=" %%a in ("temp_tables.txt") do (
+    set "tableName=%%a"
+    for /f "tokens=* delims= " %%b in ("!tableName!") do (
+        if not "%%b"=="" (
+            set /a count+=1
+            echo !count!. %%b
+            set "table!count!=%%b"
+        )
+    )
 )
+del temp_tables.txt
+
+if %count%==0 (
+    echo No hay tablas disponibles.
+    pause
+    goto :mainMenu
+)
+echo.
+set /p tablechoice="Selecciona la tabla por número para ver sus privilegios: "
+set "TABLE=!table%tablechoice%!"
 
 REM Aplicar permisos
 echo.
-echo Revocando permisos existentes para %user% en %tabla_comando%...
-psql -U postgres -d %dbname% -c "REVOKE ALL ON %tabla_comando% FROM %user%;"
-echo Otorgando permisos [%permisos%] sobre %tabla_comando% a %user%...
-psql -U postgres -d %dbname% -c "GRANT %permisos% ON %tabla_comando% TO %user%;"
+echo Revocando permisos existentes para %user% en !TABLE!...
+psql -U postgres -d %dbname% -c "REVOKE ALL ON !TABLE! FROM %user%;"
+echo Otorgando permisos [%permisos%] sobre !TABLE! a %user%...
+psql -U postgres -d %dbname% -c "GRANT %permisos% ON !TABLE! TO %user%;"
 
 echo.
 echo Permisos actualizados correctamente para el usuario %user%.
