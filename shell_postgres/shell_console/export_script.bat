@@ -6,6 +6,11 @@ set PGUSER=postgres
 set PGHOST=localhost
 set PGPORT=5432
 set DEFAULT_DB=mi_financiera_demo
+set EXPORT_DIR=C:\PostgresExports
+
+REM Obtener la fecha y hora en formato AAAAMMDD_HHMM
+for /f "tokens=2 delims==" %%i in ('"wmic os get localdatetime /value"') do set datetime=%%i
+set "EXPORT_DATE=%datetime:~0,4%%datetime:~4,2%%datetime:~6,2%_%datetime:~8,2%%datetime:~10,2%"
 
 :mainMenu
 cls
@@ -14,10 +19,85 @@ echo *           Exportar Script            *
 echo ****************************************
 echo 1. Exportar en TXT
 echo 2. Exportar en CSV
+echo 3. Exportar en JSON
+echo 4. Exportar en XML
 echo 0. Salir
 echo ****************************************
 set /p choice="Selecciona una opcion: "
 
-if "%choice%"=="1" call backup_database.bat
-if "%choice%"=="2" call restore_database.bat
-if "%choice%"=="0" goto :exitProgram
+if "%choice%"=="3" goto export_json
+if "%choice%"=="4" goto export_xml
+if "%choice%"=="0" goto exitProgram
+goto mainMenu
+
+:export_json
+cls
+echo **********************
+echo *   Exportar JSON    *
+echo **********************
+echo.
+
+REM Listar bases de datos disponibles
+echo Bases de datos disponibles:
+for /f "tokens=1,* delims=|" %%a in ('psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -lqt') do (
+    echo     %%a
+)
+
+echo.
+set /p dbname=Escriba el nombre de la base de datos [por defecto: %DEFAULT_DB%]: 
+if "%dbname%"=="" set dbname=%DEFAULT_DB%
+echo.
+
+REM Seleccionar tabla
+echo Listando tablas disponibles en la base de datos %dbname%...
+psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %dbname% -t -c "SELECT tablename FROM pg_tables WHERE schemaname='public';" > temp_tables.txt
+
+set count=0
+for /f "usebackq tokens=* delims=" %%a in ("temp_tables.txt") do (
+    set "tableName=%%a"
+    for /f "tokens=* delims= " %%b in ("!tableName!") do (
+        if not "%%b"=="" (
+            set /a count+=1
+            echo !count!. %%b
+            set "table!count!=%%b"
+        )
+    )
+)
+del temp_tables.txt
+
+if %count%==0 (
+    echo No hay tablas disponibles.
+    pause
+    goto mainMenu
+)
+
+echo.
+set /p tablechoice="Selecciona la tabla a exportar por número: "
+set "TABLE=!table%tablechoice%!"
+
+if "!TABLE!"=="" (
+    echo Tabla inválida.
+    pause
+    goto mainMenu
+)
+
+REM Crear directorio si no existe
+if not exist "%EXPORT_DIR%" (
+    mkdir "%EXPORT_DIR%"
+)
+
+REM Definir ruta del archivo de salida
+set "EXPORT_FILE=%EXPORT_DIR%\!TABLE!_export_%EXPORT_DATE%.json"
+
+REM Exportar a archivo JSON
+psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %dbname% -t -c "SELECT json_agg(row_to_json(t)) FROM (SELECT * FROM !TABLE!) t" > "!EXPORT_FILE!"
+
+echo.
+echo JSON exportado correctamente en: !EXPORT_FILE!
+pause
+goto mainMenu
+
+:exitProgram
+echo Saliendo del programa...
+endlocal
+exit /b
