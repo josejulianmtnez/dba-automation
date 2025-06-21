@@ -30,6 +30,38 @@ if "%choice%"=="4" goto export_xml
 if "%choice%"=="0" goto exitProgram
 goto mainMenu
 
+:select_database
+cls
+echo Bases de datos disponibles:
+set countdb=0
+for /f "tokens=1 delims=|" %%a in ('psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -lqt') do (
+    set /a countdb+=1
+    set "db!countdb!=%%a"
+    echo !countdb!. %%a
+)
+if %countdb%==0 (
+    echo No hay bases de datos disponibles.
+    pause
+    goto mainMenu
+)
+
+echo.
+set /p dbchoice="Selecciona la base de datos por número [por defecto: %DEFAULT_DB%]: "
+
+if "%dbchoice%"=="" (
+    set dbname=%DEFAULT_DB%
+) else (
+    if %dbchoice% GTR %countdb% (
+        echo Opcion invalida.
+        pause
+        goto select_database
+    ) else (
+        set "dbname=!db%dbchoice%!"
+    )
+)
+echo Base de datos seleccionada: %dbname%
+goto :eof
+
 :export_json
 cls
 echo **********************
@@ -37,18 +69,9 @@ echo *   Exportar JSON    *
 echo **********************
 echo.
 
-REM Listar bases de datos disponibles
-echo Bases de datos disponibles:
-for /f "tokens=1,* delims=|" %%a in ('psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -lqt') do (
-    echo     %%a
-)
+call :select_database
 
 echo.
-set /p dbname=Escriba el nombre de la base de datos [por defecto: %DEFAULT_DB%]: 
-if "%dbname%"=="" set dbname=%DEFAULT_DB%
-echo.
-
-REM Seleccionar tabla
 echo Listando tablas disponibles en la base de datos %dbname%...
 psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %dbname% -t -c "SELECT tablename FROM pg_tables WHERE schemaname='public';" > temp_tables.txt
 
@@ -94,28 +117,20 @@ psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %dbname% -t -c "SELECT json_agg(row_
 
 echo.
 echo JSON exportado correctamente en: !EXPORT_FILE!
+echo.
 pause
 goto mainMenu
 
 :export_xml
 cls
 echo **********************
-echo *   Exportar XML    *
+echo *   Exportar XML     *
 echo **********************
 echo.
 
-REM Listar bases de datos disponibles
-echo Bases de datos disponibles:
-for /f "tokens=1,* delims=|" %%a in ('psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -lqt') do (
-    echo     %%a
-)
+call :select_database
 
 echo.
-set /p dbname=Escriba el nombre de la base de datos [por defecto: %DEFAULT_DB%]: 
-if "%dbname%"=="" set dbname=%DEFAULT_DB%
-echo.
-
-REM Seleccionar tabla
 echo Listando tablas disponibles en la base de datos %dbname%...
 psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %dbname% -t -c "SELECT tablename FROM pg_tables WHERE schemaname='public';" > temp_tables.txt
 
@@ -153,14 +168,18 @@ if not exist "%EXPORT_DIR%" (
     mkdir "%EXPORT_DIR%"
 )
 
-REM Definir ruta del archivo de salida
-set "EXPORT_FILE=%EXPORT_DIR%\!TABLE!_export_%EXPORT_DATE%.json"
+REM Definir archivo de salida
+set "EXPORT_FILE=%EXPORT_DIR%\!TABLE!_export_%EXPORT_DATE%.xml"
 
-REM Exportar a archivo JSON
-psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %dbname% -t -c "SELECT json_agg(row_to_json(t)) FROM (SELECT * FROM !TABLE!) t" > "!EXPORT_FILE!"
+REM Encabezado XML
+echo ^<?xml version="1.0" encoding="UTF-8"?^> > "!EXPORT_FILE!"
+
+REM Exportar a XML
+psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %dbname% -q -A -t -c "SELECT COALESCE(xmlelement(name rows, xmlagg(xmlelement(name row, xmlforest(t.*)))), xmlelement(name rows)) FROM (SELECT * FROM !TABLE!) t;" >> "!EXPORT_FILE!"
 
 echo.
-echo JSON exportado correctamente en: !EXPORT_FILE!
+echo XML exportado correctamente en: !EXPORT_FILE!
+echo.
 pause
 goto mainMenu
 
