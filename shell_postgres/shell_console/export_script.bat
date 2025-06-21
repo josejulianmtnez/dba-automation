@@ -97,6 +97,73 @@ echo JSON exportado correctamente en: !EXPORT_FILE!
 pause
 goto mainMenu
 
+:export_xml
+cls
+echo **********************
+echo *   Exportar XML    *
+echo **********************
+echo.
+
+REM Listar bases de datos disponibles
+echo Bases de datos disponibles:
+for /f "tokens=1,* delims=|" %%a in ('psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -lqt') do (
+    echo     %%a
+)
+
+echo.
+set /p dbname=Escriba el nombre de la base de datos [por defecto: %DEFAULT_DB%]: 
+if "%dbname%"=="" set dbname=%DEFAULT_DB%
+echo.
+
+REM Seleccionar tabla
+echo Listando tablas disponibles en la base de datos %dbname%...
+psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %dbname% -t -c "SELECT tablename FROM pg_tables WHERE schemaname='public';" > temp_tables.txt
+
+set count=0
+for /f "usebackq tokens=* delims=" %%a in ("temp_tables.txt") do (
+    set "tableName=%%a"
+    for /f "tokens=* delims= " %%b in ("!tableName!") do (
+        if not "%%b"=="" (
+            set /a count+=1
+            echo !count!. %%b
+            set "table!count!=%%b"
+        )
+    )
+)
+del temp_tables.txt
+
+if %count%==0 (
+    echo No hay tablas disponibles.
+    pause
+    goto mainMenu
+)
+
+echo.
+set /p tablechoice="Selecciona la tabla a exportar por número: "
+set "TABLE=!table%tablechoice%!"
+
+if "!TABLE!"=="" (
+    echo Tabla inválida.
+    pause
+    goto mainMenu
+)
+
+REM Crear directorio si no existe
+if not exist "%EXPORT_DIR%" (
+    mkdir "%EXPORT_DIR%"
+)
+
+REM Definir ruta del archivo de salida
+set "EXPORT_FILE=%EXPORT_DIR%\!TABLE!_export_%EXPORT_DATE%.json"
+
+REM Exportar a archivo JSON
+psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %dbname% -t -c "SELECT json_agg(row_to_json(t)) FROM (SELECT * FROM !TABLE!) t" > "!EXPORT_FILE!"
+
+echo.
+echo JSON exportado correctamente en: !EXPORT_FILE!
+pause
+goto mainMenu
+
 :exitProgram
 echo Saliendo del programa...
 endlocal
