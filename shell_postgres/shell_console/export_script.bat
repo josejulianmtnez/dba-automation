@@ -158,7 +158,7 @@ psql -U %DEFAULT_USER% -d !DATABASE! -c "COPY %TABLE% TO STDOUT WITH (FORMAT CSV
 
 echo.
 echo Exportando datos de la tabla %TABLE% de la base de datos %DATABASE%...
-echo Archivo CSV exportado correctamente en %EXPORT_DIR%...
+echo Archivo CSV exportado correctamente en %EXPORT_DIR%.
 
 pause
 goto :mainMenu
@@ -242,7 +242,7 @@ psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %DATABASE% -t -c "SELECT json_agg(ro
 
 echo.
 echo Exportando datos de la tabla %TABLE% de la base de datos %DATABASE%...
-echo Archivo JSON exportado correctamente en: %EXPORT_DIR%
+echo Archivo JSON exportado correctamente en: %EXPORT_DIR%.
 echo.
 pause
 goto mainMenu
@@ -322,7 +322,7 @@ psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %DATABASE% -q -A -t -c "SELECT COALE
 
 echo.
 echo Exportando datos de la tabla %TABLE% de la base de datos %DATABASE%...
-echo Archivo XML exportado correctamente en %EXPORT_DIR%...
+echo Archivo XML exportado correctamente en %EXPORT_DIR%.
 echo.
 pause
 goto mainMenu
