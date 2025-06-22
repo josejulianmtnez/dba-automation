@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 setlocal enabledelayedexpansion
 
 REM ===========================================================
@@ -27,7 +28,8 @@ echo 4. Borrar una base de datos
 echo 5. Crear usuario y asignar permisos
 echo 6. Modificar permisos de usuario
 echo 7. Ver usuarios y sus privilegios
-echo 8. Salir
+echo 8. Exportar Script
+echo 0. Salir
 echo ****************************************
 set /p choice="Selecciona una opcion (1/2/3/4/5/6/7/8): "
 
@@ -38,7 +40,8 @@ if "%choice%"=="4" call delete_database.bat
 if "%choice%"=="5" call create_user.bat
 if "%choice%"=="6" call modify_permissions.bat
 if "%choice%"=="7" call view_users.bat
-if "%choice%"=="8" goto :exitProgram
+if "%choice%"=="8" call export_script.bat
+if "%choice%"=="0" goto :exitProgram
 
 
 pause
