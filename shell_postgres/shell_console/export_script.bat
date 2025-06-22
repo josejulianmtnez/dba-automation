@@ -1,14 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
 
-REM Configuración
 set DEFAULT_USER=postgres
 set PGHOST=localhost
 set PGPORT=5432
 set DEFAULT_DB=mi_financiera_demo
 set EXPORT_DIR=C:\exports
 
-REM Obtener la fecha y hora en formato AAAAMMDD_HHMM
 for /f "tokens=2 delims==" %%i in ('"wmic os get localdatetime /value"') do set datetime=%%i
 set "EXPORT_DATE=%datetime:~0,4%%datetime:~4,2%%datetime:~6,2%_%datetime:~8,2%%datetime:~10,2%"
 
@@ -22,7 +20,6 @@ echo 2. Exportar en CSV
 echo 0. Salir
 echo ****************************************
 set /p choice="Selecciona una opcion: "
-
 if "%choice%"=="1" goto export_txt
 if "%choice%"=="2" goto export_csv
 if "%choice%"=="0" goto :exitProgram
@@ -54,11 +51,10 @@ if %count%==0 (
 )
 set /p dbchoice="Selecciona una base de datos: "
 set "DATABASE=!db%dbchoice%!"
-echo.
 
+echo.
 echo Listando tablas disponibles en la base de datos %DATABASE%...
 psql -U %DEFAULT_USER% -h %PGHOST% -p %PGPORT% -d !DATABASE! -t -c "SELECT tablename FROM pg_tables WHERE schemaname='public';" > temp_tables.txt
-
 set count=0
 for /f "usebackq tokens=* delims=" %%a in ("temp_tables.txt") do (
     set "tableName=%%a"
@@ -79,17 +75,15 @@ if %count%==0 (
 set /p tablechoice="Selecciona la tabla a exportar: "
 set "TABLE=!table%tablechoice%!"
 
-REM Crear directorio si no existe
 if not exist "%EXPORT_DIR%" (
     mkdir "%EXPORT_DIR%"
 )
+set "EXPORT_FILE=%EXPORT_DIR%\!DATABASE!_!TABLE:.=_!_export_%EXPORT_DATE%.txt"
 
-set "EXPORT_FILE=%EXPORT_DIR%\!DATABASE!_%TABLE%_export_%EXPORT_DATE%.txt"
-
-
-psql -U %DEFAULT_USER% -d !DATABASE! -c "COPY %TABLE% TO STDOUT WITH (FORMAT CSV, HEADER true, DELIMITER ',')" > %EXPORT_FILE%
-
-echo Archivo exportado con éxito...
+psql -U %DEFAULT_USER% -d !DATABASE! -c "COPY %TABLE% TO STDOUT WITH (FORMAT TEXT, DELIMITER E'\t')" > %EXPORT_FILE%
+echo.
+echo Exportando datos de la tabla %TABLE% de la base de datos %DATABASE%...
+echo Archivo exportado con éxito en %EXPORT_DIR%.
 
 pause
 goto :mainMenu
@@ -121,11 +115,10 @@ if %count%==0 (
 )
 set /p dbchoice="Selecciona una base de datos: "
 set "DATABASE=!db%dbchoice%!"
-echo.
 
+echo.
 echo Listando tablas disponibles en la base de datos %DATABASE%...
 psql -U %DEFAULT_USER% -h %PGHOST% -p %PGPORT% -d !DATABASE! -t -c "SELECT tablename FROM pg_tables WHERE schemaname='public';" > temp_tables.txt
-
 set count=0
 for /f "usebackq tokens=* delims=" %%a in ("temp_tables.txt") do (
     set "tableName=%%a"
@@ -146,23 +139,21 @@ if %count%==0 (
 set /p tablechoice="Selecciona la tabla a exportar: "
 set "TABLE=!table%tablechoice%!"
 
-REM Crear directorio si no existe
 if not exist "%EXPORT_DIR%" (
     mkdir "%EXPORT_DIR%"
 )
-
-set "EXPORT_FILE=%EXPORT_DIR%\!DATABASE!_%TABLE%_export_%EXPORT_DATE%.csv"
-
+set "EXPORT_FILE=%EXPORT_DIR%\!DATABASE!_!TABLE:.=_!_export_%EXPORT_DATE%.csv"
 
 psql -U %DEFAULT_USER% -d !DATABASE! -c "COPY %TABLE% TO STDOUT WITH (FORMAT CSV, HEADER true, DELIMITER ',')" > %EXPORT_FILE%
 
-echo Archivo exportado con éxito...
+echo.
+echo Exportando datos de la tabla %TABLE% de la base de datos %DATABASE%...
+echo Archivo exportado correctamente en %EXPORT_DIR%...
 
 pause
 goto :mainMenu
 
-
-:exitPrograme
+:exitProgram
 echo Saliendo del programa...
 endlocal
 exit /b
