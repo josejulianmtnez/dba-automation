@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 setlocal enabledelayedexpansion
 
 set DEFAULT_USER=postgres
@@ -88,9 +89,11 @@ if not exist "%EXPORT_DIR%" (
 set "EXPORT_FILE=%EXPORT_DIR%\!DATABASE!_!TABLE:.=_!_export_%EXPORT_DATE%.txt"
 
 psql -U %DEFAULT_USER% -d !DATABASE! -c "COPY %TABLE% TO STDOUT WITH (FORMAT TEXT, DELIMITER E'\t')" > %EXPORT_FILE%
+
 echo.
 echo Exportando datos de la tabla %TABLE% de la base de datos %DATABASE%...
 echo Archivo TEXT exportado con éxito en %EXPORT_DIR%.
+echo.
 
 pause
 goto :mainMenu
@@ -159,6 +162,7 @@ psql -U %DEFAULT_USER% -d !DATABASE! -c "COPY %TABLE% TO STDOUT WITH (FORMAT CSV
 echo.
 echo Exportando datos de la tabla %TABLE% de la base de datos %DATABASE%...
 echo Archivo CSV exportado correctamente en %EXPORT_DIR%.
+echo.
 
 pause
 goto :mainMenu
@@ -203,7 +207,7 @@ set "DATABASE=!db%dbchoice%!"
 
 echo.
 echo Listando tablas disponibles en la base de datos %DATABASE%...
-psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %DATABASE% -t -c "SELECT tablename FROM pg_tables WHERE schemaname='public';" > temp_tables.txt
+psql -U %DEFAULT_USER% -h %PGHOST% -p %PGPORT% -d %DATABASE% -t -c "SELECT tablename FROM pg_tables WHERE schemaname='public';" > temp_tables.txt
 
 set count=0
 for /f "usebackq tokens=* delims=" %%a in ("temp_tables.txt") do (
@@ -238,7 +242,7 @@ if not exist "%EXPORT_DIR%" (
 )
 set "EXPORT_FILE=%EXPORT_DIR%\!TABLE!_export_%EXPORT_DATE%.json"
 
-psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %DATABASE% -t -c "SELECT json_agg(row_to_json(t)) FROM (SELECT * FROM !TABLE!) t" > "!EXPORT_FILE!"
+psql -U %DEFAULT_USER% -h %PGHOST% -p %PGPORT% -d %DATABASE% -t -c "SELECT json_agg(row_to_json(t)) FROM (SELECT * FROM !TABLE!) t" > "!EXPORT_FILE!"
 
 echo.
 echo Exportando datos de la tabla %TABLE% de la base de datos %DATABASE%...
@@ -280,7 +284,7 @@ set "DATABASE=!db%dbchoice%!"
 
 echo.
 echo Listando tablas disponibles en la base de datos %DATABASE%...
-psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %DATABASE% -t -c "SELECT tablename FROM pg_tables WHERE schemaname='public';" > temp_tables.txt
+psql -U %DEFAULT_USER% -h %PGHOST% -p %PGPORT% -d %DATABASE% -t -c "SELECT tablename FROM pg_tables WHERE schemaname='public';" > temp_tables.txt
 
 set count=0
 for /f "usebackq tokens=* delims=" %%a in ("temp_tables.txt") do (
@@ -318,7 +322,7 @@ set "EXPORT_FILE=%EXPORT_DIR%\!TABLE!_export_%EXPORT_DATE%.xml"
 
 echo ^<?xml version="1.0" encoding="UTF-8"?^> > "!EXPORT_FILE!"
 
-psql -U %PGUSER% -h %PGHOST% -p %PGPORT% -d %DATABASE% -q -A -t -c "SELECT COALESCE(xmlelement(name rows, xmlagg(xmlelement(name row, xmlforest(t.*)))), xmlelement(name rows)) FROM (SELECT * FROM !TABLE!) t;" >> "!EXPORT_FILE!"
+psql -U %DEFAULT_USER% -h %PGHOST% -p %PGPORT% -d %DATABASE% -q -A -t -c "SELECT COALESCE(xmlelement(name rows, xmlagg(xmlelement(name row, xmlforest(t.*)))), xmlelement(name rows)) FROM (SELECT * FROM !TABLE!) t;" >> "!EXPORT_FILE!"
 
 echo.
 echo Exportando datos de la tabla %TABLE% de la base de datos %DATABASE%...
