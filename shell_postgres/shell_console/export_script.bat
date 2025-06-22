@@ -49,7 +49,10 @@ if %count%==0 (
     pause
     goto :mainMenu
 )
-set /p dbchoice="Selecciona una base de datos: "
+set /p dbchoice="Selecciona una base de datos [por defecto: %DEFAULT_DB%]: "
+if "%dbchoice%"=="" (
+    set dbname=%DEFAULT_DB%
+) 
 set "DATABASE=!db%dbchoice%!"
 
 echo.
@@ -113,7 +116,10 @@ if %count%==0 (
     pause
     goto :mainMenu
 )
-set /p dbchoice="Selecciona una base de datos: "
+set /p dbchoice="Selecciona una base de datos [por defecto: %DEFAULT_DB%]: "
+if "%dbchoice%"=="" (
+    set dbname=%DEFAULT_DB%
+) 
 set "DATABASE=!db%dbchoice%!"
 
 echo.
