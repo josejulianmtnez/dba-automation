@@ -332,6 +332,6 @@ pause
 goto mainMenu
 
 :exitProgram
-echo Saliendo del programa...
+echo Regresando al menú principal...
 endlocal
 exit /b
