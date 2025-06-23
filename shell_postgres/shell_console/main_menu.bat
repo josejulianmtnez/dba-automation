@@ -29,9 +29,10 @@ echo 5. Crear usuario y asignar permisos
 echo 6. Modificar permisos de usuario
 echo 7. Ver usuarios y sus privilegios
 echo 8. Exportar Script
+echo 9. Importar Script
 echo 0. Salir
 echo ****************************************
-set /p choice="Selecciona una opcion (1/2/3/4/5/6/7/8): "
+set /p choice="Selecciona una opcion (1/2/3/4/5/6/7/8/9): "
 
 if "%choice%"=="1" call backup_database.bat
 if "%choice%"=="2" call restore_database.bat
@@ -41,6 +42,7 @@ if "%choice%"=="5" call create_user.bat
 if "%choice%"=="6" call modify_permissions.bat
 if "%choice%"=="7" call view_users.bat
 if "%choice%"=="8" call export_script.bat
+if "%choice%"=="9" call import_script.bat
 if "%choice%"=="0" goto :exitProgram
 
 
