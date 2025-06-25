@@ -5,6 +5,7 @@ setlocal enabledelayedexpansion
 set DEFAULT_USER=postgres
 set PGHOST=localhost
 set PGPORT=5432
+set IMPORT_DIR=C:\exports
 
 :startMenu
 cls
@@ -95,13 +96,54 @@ if "!TABLE!"=="" (
 )
 
 echo.
-set /p csvfile="Ingresa la ruta completa del archivo CSV a importar (C:\exports\8ids1_public_users_export_20250622_2245.csv): "
+echo Listando archivos CSV en %IMPORT_DIR%...
+echo.
+dir /b /a:-d "%IMPORT_DIR%\*.csv" > temp_csvfiles.txt
 
-if not exist "!csvfile!" (
-    echo El archivo especificado no existe.
+set count=0
+for /f "usebackq delims=" %%f in ("temp_csvfiles.txt") do (
+    set /a count+=1
+    echo !count!. %%f
+    set "file!count!=%%f"
+)
+
+if %count%==0 (
+    echo No se encontraron archivos CSV en %IMPORT_DIR%.
     pause
     goto startMenu
 )
+
+:select_csvfile
+echo.
+set /p filechoice="Selecciona el número del archivo CSV a importar: "
+if "%filechoice%"=="" (
+    echo Opción inválida.
+    goto select_csvfile
+)
+for /f "delims=0123456789" %%x in ("%filechoice%") do (
+    echo Opción inválida.
+    goto select_csvfile
+)
+if %filechoice% lss 1 (
+    echo Opción inválida.
+    goto select_csvfile
+)
+if %filechoice% gtr %count% (
+    echo Opción inválida.
+    goto select_csvfile
+)
+
+set "csvfile=%IMPORT_DIR%\!file%filechoice%!"
+
+if not exist "!csvfile!" (
+    echo El archivo seleccionado no existe.
+    pause
+    goto startMenu
+)
+del temp_csvfiles.txt
+
+echo.
+echo Archivo seleccionado: !csvfile!
 
 echo Importando archivo CSV en la tabla: !TABLE! de la base de datos: !DATABASE!
 psql -U %DEFAULT_USER% -h %PGHOST% -p %PGPORT% -d !DATABASE! -c "\COPY public.!TABLE! FROM '!csvfile!' DELIMITER ',' CSV HEADER;"
@@ -186,19 +228,58 @@ if "!TABLE!"=="" (
 )
 
 echo.
-set /p txtfile="Ingresa la ruta completa del archivo TXT a importar (ej. C:\exports\datos.txt): "
+echo Listando archivos TXT en %IMPORT_DIR%...
+echo.
+dir /b /a:-d "%IMPORT_DIR%\*.txt" > temp_txtfiles.txt
 
-if not exist "!txtfile!" (
-    echo El archivo especificado no existe.
+set count=0
+for /f "usebackq delims=" %%f in ("temp_txtfiles.txt") do (
+    set /a count+=1
+    echo !count!. %%f
+    set "file!count!=%%f"
+)
+
+if %count%==0 (
+    echo No se encontraron archivos TXT en %IMPORT_DIR%.
     pause
     goto startMenu
 )
 
+:select_txtfile
+echo.
+set /p filechoice="Selecciona el número del archivo TXT a importar: "
+if "%filechoice%"=="" (
+    echo Opción inválida.
+    goto select_txtfile
+)
+
+for /f "delims=0123456789" %%x in ("%filechoice%") do (
+    echo Opción inválida.
+    goto select_txtfile
+)
+
+if %filechoice% lss 1 (
+    echo Opción inválida.
+    goto select_txtfile
+)
+
+if %filechoice% gtr %count% (
+    echo Opción inválida.
+    goto select_txtfile
+)
+
+set "txtfile=%IMPORT_DIR%\!file%filechoice%!"
+
+if not exist "!txtfile!" (
+    echo El archivo seleccionado no existe.
+    pause
+    goto startMenu
+)
+del temp_txtfiles.txt
 
 set delimiter=E'\t'
-
 echo Importando archivo TXT en la tabla: !TABLE! de la base de datos: !DATABASE!
-psql -U %DEFAULT_USER% -h %PGHOST% -p %PGPORT% -d !DATABASE! -c "\COPY public.!TABLE! FROM '!txtfile!' DELIMITER !delimiter! CSV HEADER;"
+psql -U %DEFAULT_USER% -h %PGHOST% -p %PGPORT% -d !DATABASE! -c "\COPY public.!TABLE! FROM '!txtfile!' DELIMITER !delimiter!;"
 
 if %ERRORLEVEL%==0 (
     echo Importación completada exitosamente.
@@ -208,4 +289,3 @@ if %ERRORLEVEL%==0 (
 
 pause
 goto startMenu
-
